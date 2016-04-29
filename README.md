@@ -1,6 +1,6 @@
 # Dojo "Poker Hand Scoring"
 This dojo is about validating and scoring a poker hand.  This dojo is suitable for **novice F# programmers**,
-and should be doable in **two hours**.  There are other dojos for this out there (see [KataPokerHands](http://codingdojo.org/cgi-bin/index.pl?KataPokerHands) which is generic, and [Poker-Dojo](https://github.com/gstamp/poker-dojo) for Clojure)
+and should be doable in **two hours**.  There are other dojos for this out there (see [KataPokerHands](http://codingdojo.org/cgi-bin/index.pl?KataPokerHands) which is generic, and [Poker-Dojo](https://github.com/gstamp/poker-dojo) for Clojure).  Beginners will learn about F# types, Discriminating Unions, pattern matching, and unit testing.  More experienced programmers get a look at [Railway Oriented Programming](http://fsharpforfunandprofit.com/rop/) and [Property Based Testing](http://fsharpforfunandprofit.com/pbt/).
 
 At the most basic level, [Poker](https://en.wikipedia.org/wiki/Poker) is a game using a standard deck of playing cards
 where players attempt to build a hand with the highest score amongst all other players.  Fundamental to the game, then,
