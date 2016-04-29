@@ -76,11 +76,6 @@ let merge2TupleResult (result1, result2) =
 // Miscellaneous helper / utility functions
 // #################################################################################################
 // -------------------------------------------------------------------------------------------------
-// Sometimes I like C#'s not equal...  Sorry F# purists! :)
-// -------------------------------------------------------------------------------------------------
-let (!=) item1 item2 = not (item1 = item2)
-
-// -------------------------------------------------------------------------------------------------
 // Convert a list to a 5-Tuple if it has 5 elements or Fail with InvalidListSize
 // -------------------------------------------------------------------------------------------------
 let to5Tuple list = 
@@ -359,9 +354,6 @@ let doResultTests() =
 // Tests for the Utility section of code
 // -------------------------------------------------------------------------------------------------
 let doUtilityTests() = 
-   // != operator
-   assertFalse "not false" (3 != 3)
-   assertTrue "not true" (1 != 3)
    // to5Tuple
    assertEq "to5Tuple success" (Success(1, 2, 3, 4, 5)) (to5Tuple [ 1; 2; 3; 4; 5 ])
    assertFail "to5Tuple tooSmall" InvalidListSize (to5Tuple [ 1; 2; 3 ])
