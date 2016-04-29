@@ -56,6 +56,7 @@
   <ItemGroup>
     <Compile Include="FsPoker.fs" />
     <None Include="App.config" />
+    <None Include="Guided.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
