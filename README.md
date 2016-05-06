@@ -54,27 +54,27 @@ A hand should be scored using the category with the strictest rules (rarest hand
 of a kind will also have a three of a kind and two of a kind, but would only be considered to be _four of a kind_.
 * (Score of 10) **Royal Flush**
   * Hand is both a **straight** AND a **flush**, and the high card is an Ace, there is no kicker
-  * Example: T♥ J♥ Q♥ K♥ [A♥] () -- no cards are ignored in this category
+  * Example: T♥ J♥ Q♥ K♥ [A]♥ ( no cards are ignored in this category )
   * The Ace is the relevant rank.
   * There are 4 possible, one for each suit, for a likelihood of 0.00015%
 * (Score of 9) **Straight Flush**
   * Hand is both a **straight** AND a **flush**
-  * Example: 4♥ 5♥ 6♥ 7♥ [8♥] () -- no cards are ignored in this category
+  * Example: 4♥ 5♥ 6♥ 7♥ [8]♥ ( no cards are ignored in this category )
   * The highest card value is the rank, and there is no kicker
   * There are 40 possible, 4 suits * 10 possible high cards, for a likelihood of 0.0015%
 * (Score of 8) **Four of a Kind**:
   * Hand has four cards with the same value
-  * Example: [4]♣ 4♦ 4♥ 4♠ ({2}♥) -- the card with the non-duplicated value is ignored
+  * Example: [4]♣ 4♦ 4♥ 4♠ ( {2}♥ ) -- the card with the non-duplicated value is ignored
   * The duplicated value is the rank, and the ignored card is the kicker
   * There are 624 possible hands, for a likelihood of 0.024%
 * (Score of 7) **Full house**:
   * Hand has three cards with one value as well as two cards with a second value
-  * Example: [2]♣ 2♦ 2♥ {4}♠ 4♥ () -- no cards are ignored in this category
+  * Example: [2]♣ 2♦ 2♥ {4}♠ 4♥ ( no cards are ignored in this category )
   * The value of the three of a kind is the rank, and the kicker is the two of a kind
   * There are 3,744 possible hands, for a likelihood of 0.1441%
 * (Score of 6) **Flush**:
   * Hand has cards of only a single suit
-  * Example: 2♥ 4♥ 6♥ 9♥ [J]♥ () -- no cards are ignored in this category
+  * Example: 2♥ 4♥ 6♥ 9♥ [J]♥ ( no cards are ignored in this category )
   * The highest card value is the rank, and there is no kicker
   * There are 5,108 possible hands, for a likelihood of 0.196%
 * (Score of 5) **Straight**:
@@ -84,21 +84,21 @@ of a kind will also have a three of a kind and two of a kind, but would only be 
   * There are 10,200 possible hands, for a likehood of 0.39%
 * (Score of 4) **Three of a Kind**:
   * Hand has three cards with the same value
-  * Example: [4]♣ 4♦ 4♥ (6♠ {J}♥) -- the cards with non-duplicated values are ignored
+  * Example: [4]♣ 4♦ 4♥ ( 6♠ {J}♥ ) -- the cards with non-duplicated values are ignored
   * The duplicated value is the rank and the highest ignored card is the kicker
   * There are 54,912 possible hands, for a likelihood of 2.11%
 * (Score of 3) **Two Pair**:
   * Hand has two cards with the same value as well as two cards which share a second value
-  * Example: [8]♥ 8♠ {4}♣ 4♦ ({J}♥) -- the card with the non-duplicated values is ignored
+  * Example: [8]♥ 8♠ {4}♣ 4♦ ( {J}♥ ) -- the card with the non-duplicated values is ignored
   * The highest pair is the rank and the lowest pair is the first kicker while the ignored card is the second kicker
   * There are 123,552 possible hands, for a likelihood of 4.75%
 * (Score of 2) **One Pair**:
   * Hand has two cards with the same value
-  * Example: [4]♣ 4♦ ({K}♥ {T}♠ {8}♥) -- the cards with non-duplicated values are ignored
+  * Example: [4]♣ 4♦ ( {K}♥ {T}♠ {8}♥ ) -- the cards with non-duplicated values are ignored
   * The duplicated value is the rank, and the remaining cards in descending order are kickers if needed.
   * There are 1,098,240 possible hands, for a likelihood of 42.26%
 * (Score of 1) **High Card**:
   * Hand with absolutely nothing special about it at all
-  * Example: [K]♣ ({Q}♥ {T}♠ {8}♥ {4}♦) -- the cards without the highest value are ignored
+  * Example: [K]♣ ( {Q}♥ {T}♠ {8}♥ {4}♦ ) -- the cards without the highest value are ignored
   * The highest value is the rank, and the remaining cards in descending order are kickers if needed.
   * There are 1,302,540 possible hands, for a likelihood of 50.11%
