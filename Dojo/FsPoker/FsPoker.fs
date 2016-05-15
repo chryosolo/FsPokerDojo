@@ -193,7 +193,7 @@ let parseHand (strHand : string) =
    let cards = Array.toList (strHand.Split([| ' ' |]))
    let parsed = List.map parseCard cards |> List.sort
    // early exit for existence of an invalid card
-   if parsed |> List.exists (fun item -> not (isSuccessful item)) then Fail HandHasInvalidCards
+   if parsed |> List.exists (isSuccessful >> not ) then Fail HandHasInvalidCards
    // all cards are individually valid -- fail if there duplicate valid cards
    else 
       let areDups = 
