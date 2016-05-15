@@ -58,6 +58,7 @@
     <None Include="App.config" />
     <None Include="Beginner.fsx" />
     <None Include="Intermediate.fsx" />
+    <None Include="Final.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
