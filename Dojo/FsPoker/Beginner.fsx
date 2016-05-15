@@ -6,7 +6,7 @@ It's MIT licensed - use it, share it, modify it. *)
 
 (*
 # Introduction
-###############################################################################
+################################################################################
 The goal of the dojo is to take a valid poker hand and put it in the correct
 scoring category.  To achieve this, we will break the task down into manageable
 pieces, and then suggest directions to explore further! 
@@ -18,6 +18,8 @@ The INTERMEDIATE script takes over from there -- the beginner program is simply
 given, already working, and steps will work toward the improvement of the
 program by giving better error handling using computational expressions and
 Railway Oriented Programming, and better testing using FsCheck and xUnit.
+
+The FINAL script shows my personal implementation of all intermediate tasks.
 *)
 
 // --> delete this error when you understand to look for tasks! :)
@@ -25,7 +27,7 @@ failwith( "Any time you see '-->', this is a task for you!" )
 
 (*
 Freebie: Simple testing function -- we'll get more in-depth later
-###############################################################################
+################################################################################
 It is hugely helpful to be able to test code while it is still being written.
 The function testFunc exists to help us test our other functions as we're
 writing them.  It will print out a test description, whether or not the test
@@ -54,15 +56,15 @@ testFunc "testFunc - failure" (fun () -> failwith "sample failure") ()
 
 (*
 Chapter 1: Representing a card
-###############################################################################
+################################################################################
 Your goal here is to take a two character string input, like "5C", and return a
 strongly-typed card (Five, Clubs), or throw an error on invalid input.
 
-We start with defining types which hopefully will make impossible to hold
+We start with defining types which hopefully will make impossible holding
 incorrect data.
 
-F# has a capability called a Discriminated Union, which define a list of values
-and optionally allows each to have dmata of different types.  At its simplest,
+F# has a Discriminated Union (usually just DU), which define a list of values
+and optionally allows each to have data of different types.  At its simplest,
 DU choices do not have to have any data, and are like an unnumbered enum.
 
    type EmptyDu =
@@ -73,6 +75,10 @@ DU choices do not have to have any data, and are like an unnumbered enum.
 There are four suits: Clubs, Spades, Hearts, and Diamonds. *)
 
 // --> Fix and complete the Suit DU.
+
+// -----------------------------------------------------------------------------
+// Suits as an isolated concept
+// -----------------------------------------------------------------------------
 type Suit =
    | Suit1
    | Suit2
@@ -85,13 +91,17 @@ Enum syntax is like the empty DU, except each holds an integer value.
       | Squared2 = 4
       | Squared3 = 9
 
-Even though values will be numeric, we will use defined names for easier future
-programming. There are thirteen Values: Two, Three, Four, Five, Six, Seven,
+Even though ranks will be numeric, we will use defined names for easier future
+programming. There are thirteen Ranks: Two, Three, Four, Five, Six, Seven,
 Eight, Nine, Ten, Jack, Queen, King, Ace
 *)
 
-// --> Fix and complete the Value enum.
-type Value =
+// --> Fix and complete the Rank enum.
+
+// -----------------------------------------------------------------------------
+// Rank as an isolated concept
+// -----------------------------------------------------------------------------
+type Rank =
    | Squared1 = 1
    | Squared2 = 4
    | Squared3 = 9
@@ -99,52 +109,73 @@ type Value =
 (*
 A card has both a Suit and a Value, never just one or the other.  This is a
 perfect time to use a Tuple, which requires all portions to be used together.
-A tuple type has portion types separated by an asterisk:
+A tuple is like a class, except properties are not accessed by name, but by
+position.  A tuple type DEFINITION has portion types separated by an asterisk:
 
    type Date = int * int * int * DayOfWeek
 
-Note the Date has three integer values and a DayOfWeek.  It is up to the
-programmer to remember that the first int is a Month, the second is a Day,
-and the third is a Year.  This is a weakness of Tuples, but there are ways
-to help get around this which we'll see later.
+However, when USED, tuple portions are separated by a comma:
 
-hint: Records are one way around this
-hint: Single case DUs help avoid "primitive obsession":  see
+   let petBirthDate = 2010, 12, 14, DayOfWeek.Tuesday
+
+Note the Date has three integer values and a DayOfWeek.  It is up to the
+programmer to remember that the first int is a Month, the second is a Day, and
+the third is a Year.  This is a weakness of Tuples, but there are ways to help
+get around this:
+
+* Records are like a class, and allow by-name access:
+   
+   type Date = { Year:int; Month:int; Day:int; DayOfWeek:DayOfWeek }
+   let petBirthDate = { Year:2010; Month=12; Day=14;
+                        DayOfWeek=DayOfWeek.Tuesday }
+
+* Single-case DUs label an intent of a basic type and can help avoid "primitive
+  obsession":  see
   http://blog.ploeh.dk/2015/01/19/from-primitive-obsession-to-domain-modelling/
+
    type Year = Year of int
    type Month = Month of int
    type Day = Day of int
    type Date = Year * Month * Day * DayOfWeek
+   let petBirthDate = Year 2010, Month 12, Day 14, DayOfWeek.Tuesday
+   // or if you had another empty DU...
+   let petBirthDate = Year 2010, December, Day 14, DayOfWeek.Tuesday
 
-Our card type will have a Value and a Suit
+However, for us, our tuple portions aren't of the same type, so we don't need to
+worry about it! :) Our card type will be a tuple with a Rank and a Suit.
 *)
 
 // --> Fix the Card type definition
+
+// -----------------------------------------------------------------------------
+// Card is a Rank and Suit
+// -----------------------------------------------------------------------------
 type Card = int * float * bool
 
 (*
 Now we'll have a function which will parse a character and return the valid
 suit, or throw an error.  Pattern matching is a strong feature of F#.  It works
-really well for DUs, because it requires us to deal with all cases which
-eliminates all bugs about forgetting to handle everything.
+really well for DUs, because the compiler requires us to deal with all cases
+which eliminates all bugs about forgetting to handle a corner case.
 
-   let myColorLikes color =
+   let isFavoriteColor color =
       match color with
       | EmptyDu.Red -> true
       | EmptyDu.Blue -> false
    // throws a compile-time error because EmptyDu.Green wasn't handled
 
-Pattern matching also work for enums, but here's the interesting thing... In
-F#, you can dynamically create new enum values at runtime, so the list you give
-in code cannot be considered "complete".  As such, you can never cover all
-possible enum values, so you must use a wildcard to catch unspecified values.
+Pattern matching also work for enums, but here's the interesting thing... In F#,
+you can dynamically create new enum values at runtime, so the list you give in
+code can never be considered "complete", so you MUST use a wildcard to catch
+unspecified values.
 See https://fsharpforfunandprofit.com/posts/enum-types/ for more info.
 
-let myValueLikes value =
-   match value with
-   | Value.Squared1 -> true
-   | Value.Squared2 -> false
-   | Value.Squared3 -> false
+let isFavoriteRank rank =
+   match rank with
+   | Rank.Ace -> false
+   | Rank.Two -> true
+   ...
+   | Rank.King -> false
    // gives a warning that you haven't covered all cases, like 0.  ?!?  There
    // IS NO ZERO enum!!!  Oh, right, someone may MAKE ONE at runtime...
    | _ -> failwith "I haven't handled that enum yet..."
@@ -153,6 +184,11 @@ We will use C for clubs, S for spades, H for hearts, and D for diamonds.
 *)
 
 // --> fix and complete the function
+
+// -----------------------------------------------------------------------------
+// Parse a character representation of a suit into a Suit.  Valid suits are:
+// 'C', 'S', 'H', 'D'
+// -----------------------------------------------------------------------------
 let parseSuit charSuit =
    match charSuit with
    | 'q'                 // not handling 'q' means it is handled below
@@ -167,15 +203,20 @@ testFunc "parseSuit invalid" parseSuit 'Q'
 We will use 2-9 for Two..Nine, T for Ten, J for Jack, Q for Queen, K for King,
 and A for Ace
 *)
-// --> fix and complete the parseValue function
-let parseValue charValue =
-   match charValue with
-   | '1' -> Value.Squared3
-   | _ -> failwith "Invalid value."
+// --> fix and complete the parseRank function
 
-testFunc "parseValue success numeric" parseValue '5'
-testFunc "parseValue success face" parseValue 'Q'
-testFunc "parseValue invalid" parseValue '1'
+// -----------------------------------------------------------------------------
+// Parse a character representation of a rank into a Rank.  Valid values are:
+// '2' .. '9', 'T', 'J', 'Q', 'K', 'A'
+// -----------------------------------------------------------------------------
+let parseRank charRank =
+   match charRank with
+   | '1' -> Rank.Squared3
+   | _ -> failwith "Invalid rank."
+
+testFunc "parseRank success numeric" parseRank '5'
+testFunc "parseRank success face" parseRank 'Q'
+testFunc "parseRank invalid" parseRank '1'
 
 (*
 We'll put it together here and return a card or throw an error.  We'll use
@@ -183,6 +224,11 @@ pattern matching again, this time on the size of an array.  If we're given
 two chars, we'll assume they are a value followed by a suit.  Anything else
 is invalid.
 *)
+
+// -----------------------------------------------------------------------------
+// Parse a two-character string representation of a card into a Card. Is NOT
+// case sensitive.
+// -----------------------------------------------------------------------------
 let parseCard (strCard:string) =
    // --> add a ToUpper so you can simplify above parsing!
    let chars = strCard.   ToCharArray()
@@ -190,26 +236,26 @@ let parseCard (strCard:string) =
    // here pattern matching is seeing if the chars array can be placed into a
    // two-item array.  If it can, it will name them charValue and charSuit,
    // which you can use when it's appropriate!  Handy!
-   | [| charValue; charSuit |] ->
+   | [| charRank; charSuit |] ->
       // --> call the parseValue and parseSuit functions
-      let value = Value.Squared1
+      let rank = Rank.Squared1
       let suit = Suit.Suit2
-      value,suit
+      rank,suit
    // array isn't two items long
    | _ -> failwith "Invalid card syntax."
 
 testFunc "parseCard success UPPER lower" parseCard "Tc"
 testFunc "parseCard success lower UPPER" parseCard "aS"
 testFunc "parseCard invalid card syntax" parseCard "123"
-testFunc "parseCard invalid value valid suit" parseCard "1s"
-testFunc "parseCard valid value invalid suit" parseCard "4K"
+testFunc "parseCard invalid rank" parseCard "1s"
+testFunc "parseCard invalid suit" parseCard "4K"
 
 
 
 
 (*
 Chapter 2: Representing a hand
-###############################################################################
+################################################################################
 In chapter two, we will be taking a string of five cards separated by spaces,
 like "2C 3C 4C 5C 6C" and converting it into a Hand, which will be a 5-tuple of
 Cards.
@@ -217,30 +263,23 @@ Cards.
 
 // --> make sure your Card type from above matches, and then delete this line
 //     and switch all future Code from Card' to just Card
-type Card' = Value * Suit
+type Card' = Rank * Suit
 // --> fix the hand type
+
+// -----------------------------------------------------------------------------
+// A hand is five cards
+// -----------------------------------------------------------------------------
 type Hand = bool * double
 
 (*
 F# has several built in collection types including :
-- Arrays -- random access by index
-- List -- sequential access via a singly linked list
-- Sequence -- "like a list" -- is lazily evaluated and compatible with rest of
-              .NET but doesn't support pattern matching as well, and poor
+* Arrays -- random access by index
+* List -- sequential access via a singly linked list
+* Sequence -- "like a list" -- is lazily evaluated and compatible with rest of
+              .NET but doesn't fully support pattern matching, and poor
               performance in certain areas
 Note -- see https://fsharpforfunandprofit.com/posts/list-module-functions
 for distinction between the collection types, and when you might choose each.
-
-There are two main ways to branch in F#.  See
-https://fsharpforfunandprofit.com/posts/control-flow-expressions/ for more.
-
-The simpler is if-then-else:
-
-   let isEven x = if x % 2 = 0 then true else false
-
-However, IF is an imperative concept in a functional mindset.  In F#, it is an
-expression, meaning both parts must return the same type of value.  We'll use
-use if-then-else in our next function.
 
 We will need to be able to tell if an array of cards contains any duplicates.
 We'll use the GROUP BY function which gives an array of buckets where each
@@ -252,16 +291,21 @@ the length of the array of buckets is less than the input length, there must be
 a duplicate!
 *)
 
+// -----------------------------------------------------------------------------
+// Return if the given array of cards has any duplicates.  Puts cards into
+// groups, and if number of groups is less than number of cards, there is a
+// duplicate.
+// -----------------------------------------------------------------------------
 let areDups cardArray =
    let uniqueCards = Array.groupBy id cardArray
-   // --> functions return their last expression.  Here, we should return true
-   //     only if the uniqueCards length is less than the cardArray length
+   // --> functions return their last expression.  Here, we should return
+   //     whether the uniqueCards length is less than the cardArray length
    true
    
-testFunc "areDups all unique" areDups [| (Value.Squared1,Suit.Suit1);
-                                         (Value.Squared1,Suit.Suit2) |]
-testFunc "areDups duplicates" areDups [| (Value.Squared1,Suit.Suit1);
-                                         (Value.Squared1,Suit.Suit1) |]
+testFunc "areDups all unique" areDups [| (Rank.Squared1,Suit.Suit1);
+                                         (Rank.Squared1,Suit.Suit2) |]
+testFunc "areDups duplicates" areDups [| (Rank.Squared1,Suit.Suit1);
+                                         (Rank.Squared1,Suit.Suit1) |]
 
 (*
 You can have functions which take a "Generic" type.  For instance -- if you
@@ -279,9 +323,21 @@ Array data is accessed with a "." and the index number in square braces:
 let firstItem = myArray.[0]
 let secondItem = myArray.[1]
 
-Pattern matching is the other way common way to branch, and is a much better
-fit for branching in a functional language.  We'll do the same test as the if
-above, to see the syntax, then drastically improve it:
+There are two main ways to branch in F#.  See
+https://fsharpforfunandprofit.com/posts/control-flow-expressions/ for more.
+
+The simpler is if-then-else:
+
+   let isEven x = if x % 2 = 0 then true else false
+
+However, F# is a functional language, so we don't have an if STATEMENT which
+controls flow.  Instead, we have an if EXPRESSION which returns either one value
+or another of the same type.  In the above example, a value is assigned to the
+RESULT of the if expression.
+
+The same pattern matching we saw above is the other way common way to branch,
+and is a much better fit for branching in a functional language.  We'll do the
+same test as the if above, to see the syntax, then drastically improve it:
 
    let isEven x = match x % 2 = 0 with
                   | true -> true
@@ -292,30 +348,37 @@ of 2 equalling 0, and testing it against patterns, and following the path of
 the first matching pattern.  In this case, true, yielding true.  But, we can
 do better by matching possible results instead of whether the results equal 0:
 
-  let isEven x = match x % 2 with
-                 | 0 -> true
-                 | _ -> false
+   let isEven x = match x % 2 with
+                  | 0 -> true
+                  | _ -> false
 
 This is better because we often want to use values created in the conditional:
 
    let stringToInt str = match System.Int32.TryParse( str ) with
-                         | true, x -> Some x    // just got x and now using it
+                         | true, x -> Some x    // just got x and now use it
                          | false, _ -> None
+
+What does TryParse return?  It's a boolean return plus an int out parameter.  In
+F#, this is simply returned as a tuple, which we match against, then directly
+use the value.  Very slick!
 *)
 
+// -----------------------------------------------------------------------------
+// Turn the array of 5 cards into a 5-tuple of cards, or fail if not 5.
+// -----------------------------------------------------------------------------
 let cardsToHand (cards:'a[]) =
    match cards.Length with
    // --> add case when length is 5, return a 5-tuple of cards
    | _ -> failwith "Invalid hand size."
 
-testFunc "cardsToHand success" cardsToHand [| (Value.Squared1, Suit.Suit1); 
-                                              (Value.Squared1, Suit.Suit2);
-                                              (Value.Squared2, Suit.Suit1);
-                                              (Value.Squared2, Suit.Suit2);
-                                              (Value.Squared3, Suit.Suit1); |]
+testFunc "cardsToHand success" cardsToHand [| (Rank.Squared1, Suit.Suit1); 
+                                              (Rank.Squared1, Suit.Suit2);
+                                              (Rank.Squared2, Suit.Suit1);
+                                              (Rank.Squared2, Suit.Suit2);
+                                              (Rank.Squared3, Suit.Suit1); |]
 testFunc "cardsToHand invalid size"
-         cardsToHand [| (Value.Squared1, Suit.Suit1); 
-                        (Value.Squared2, Suit.Suit2); |]
+         cardsToHand [| (Rank.Squared1, Suit.Suit1); 
+                        (Rank.Squared2, Suit.Suit2); |]
 
 (*
 We can use String.Split to get an array of card tokens, and just send them to
@@ -338,11 +401,15 @@ is just an int, and then by Suit, which is an empty DU, which is turned into
 int cases by the compiler, so they're sortable too.
 *)
 
+// -----------------------------------------------------------------------------
+// Parse the hand string into a valid hand, or fail with a reason why the hank
+// string was invalid.
+// -----------------------------------------------------------------------------
 let parseHand (strHand:string) =
    let cardTokens = strHand.Split[| ' ' |]
    // --> change the mapping to call our parseCard function
    let cards = cardTokens
-               |> Array.map (fun token -> Value.Squared1, Suit.Suit1 )
+               |> Array.map (fun token -> Rank.Squared1, Suit.Suit1 )
                |> Array.sort
    // the above |> is a pipe, and it passes the result forward to be the final
    // parameter of the next expression.  This instance is the equivalent of:
@@ -364,7 +431,306 @@ testFunc "parseHand duplicate card" parseHand "2C 4H 3D 6S 2C"
 
 (*
 Chapter 3: Scoring a hand
-###############################################################################
-In chapter three, we will be scoring a poker hand.
+################################################################################
+In chapter three, we will be taking a valid poker hand, analyzing it in several
+ways, and scoring it.  We should then be able to take many hand scores and
+simply ask F# to sort them to figure out which is best!
+
+Remember that DUs cases can have different data types.  A RoyalFlush has no High
+Card, but a StraightFlush does.  As the categories get lower value we must
+consider more and more "non-category" cards for a proper comparison.  In the
+lowest value category, HighCard, each card rank is stored for comparison.
+
+We will declare our categories in ascending order, so a Max or Min statement
+will return the highest or lowest accordingly.
 *)
 
+// -----------------------------------------------------------------------------
+// Possible hand scoring categories
+// -----------------------------------------------------------------------------
+type HandCategory = 
+   // --> HighCard is a 5-tuple of Rank
+   | HighCard of int
+   // --> OnePair is a 4-tuple of Rank
+   | OnePair of int
+   // --> TwoPair is a 3-tuple of Rank
+   | TwoPair of int
+   // --> ThreeKind is a 2-tuple of Rank
+   | ThreeKind of int
+   // --> Straight and Flush are just a Rank
+   | Straight of int
+   | Flush of int
+   // --> FullHouse and FourKind are a 2-tuple of Rank
+   | FullHouse of int
+   | FourKind of int
+   // --> StraightFlush is just a Rank
+   | StraightFlush of int
+   | RoyalFlush
+
+(*
+Most functions below will need to be able to access cards out of an array
+instead of the tuple.  To facilitate this, we'll one of F#'s features which
+deconstructs a complex data structure into its component parts.
+
+   let (tupleItem1, tupleItem2) = tuple
+   // record syntax feels backwards to me, but meh...
+   let {Year=theYear; Month=aMonth; Day=someDay; DayOfWeek=whatDay} = date
+*)
+
+// -----------------------------------------------------------------------------
+// Return the hand (5-tuple of cards) as an array of cards
+// -----------------------------------------------------------------------------
+let toArray hand =
+   // --> deconstruct the hand into 5 cards named c1 through c5
+   let (fst,snd) = hand
+   // --> return all five cards in order in an array
+   [|fst;snd|]
+
+testFunc "toArray success" toArray <| parseHand "AD 2C 3D 6S KC"
+
+(*
+Determining if a hand is a straight is as easy as checking each consecutive pair
+of cards in a hand and if each has the property that the second card is the next
+rank after the first card, then the hand is a straight.
+
+We will be turning an enum value to its corresponding int, which is easy:
+
+   let intThree = int Rank.Three
+*)
+
+// -----------------------------------------------------------------------------
+// Return if the second rank is exactly one more than the first rank
+// -----------------------------------------------------------------------------
+let isNextRank (ranks : Rank * Rank) =
+   // --> use deconstruction to pull rank1 and rank2 out from ranks
+
+   // --> return "rank2 as an int" equals "rank1 as an int" plus 1
+   false
+
+testFunc "isNextRank true: two,three" isNextRank (parseRank '2', parseRank '3')
+testFunc "isNextRank true: king,ace" isNextRank (parseRank 'K', parseRank 'A')
+testFunc "isNextRank false: six,ten" isNextRank (parseRank '6', parseRank 'T')
+
+
+(*
+Now we'll finish the check for if a hand is a straight.  We'll use the
+Seq.pairwise function, which takes a sequence 1;2;3;... and returns a sequence
+of tuples of consecutive pairs: (1,2);(2,3);(3,4);...  We will also use the
+Seq.forall function, which returns true if the function returns true for all
+items in the sequence. The only problem is our hands are in an array. All F#
+collections let you easily convert from one collection type to another:
+
+   let array = [|1;2;3;4;5|]
+   let list = Array.toList array
+   let seq = List.toSeq list
+   let list2 = List.ofArray array
+   let seq2 = Seq.ofList list2
+
+Also notice complex functions often just pipe data through simple functions:
+
+   let complexOutput =
+      input
+      |> pipedToStepOne
+      |> thenToStepTwo
+      |> thenStepThree
+      |> finallytoStepFour
+*)
+
+// -----------------------------------------------------------------------------
+// Return whether or not the given hand is a straight (sequential ranks)
+// Assumes the hand is valid and already sorted by Rank ascending.
+// -----------------------------------------------------------------------------
+let isStraight hand =
+   // --> start pipelining with simply the given hand instead of this mess :)
+   [|(parseRank '2',0),(parseRank '3',0)|]
+   // --> turn the hand into an array of cards using our toArray function
+
+   |> Array.toSeq
+   // --> turn the sequence of cards into a sequence of card pairs
+
+   // --> return whether for all pairs the second rank is 'next' after the first
+   |> Seq.forall( fun( (r1, _), (r2,_ ) ) -> false )
+
+testFunc "isStraight true" isStraight ( parseHand "2C 3D 4D 5S 6H" )
+testFunc "isStraight false" isStraight ( parseHand "2C 3D 4D 5S 5H" )
+
+
+(*
+For checking whether the given hand is a flush, we will simply take our array of
+cards and use the Array.forall function to make sure each card has the same suit
+as the first card in the array.
+
+You'll see the term "lambda" everywhere when talking about functional concepts.
+Basically, this is just a function, but you're not formally declaring it and
+giving it to a name -- you're just declaring it inline and using it:
+
+   // no lambda
+   let isOdd anInt = anInt % 2 = 1
+   let isThreeOdd = isOdd 3
+
+   // rewritten using a lambda
+   let isThreeOdd = 3 |> (fun anInt -> anInt % 2 = 1)
+
+Why use them?  Sometimes you won't.  Functions that are too long or complicated
+or that you'll use again and again should not be lambdas.  Many functions are
+necessary as wrappers around given core and library functions, and these are
+usually specific to your data and situation, and are perfect candidates for
+lambdas.  In the parseCard function above, we wrap a call to Array.map with the
+actual transformation handled by a lambda:
+
+   let cards = cardTokens
+               |> Array.map ( fun token -> parseCard token )
+               |> Array.sort
+*)
+
+// -----------------------------------------------------------------------------
+// Return whether or not the given hand is a flush (single suit)
+// Assumes the hand is valid (such as from parseHand)
+// -----------------------------------------------------------------------------
+let isFlush hand =
+   // --> deconstruct the hand so the first card's suit is saved
+   let ( _, _, (_,thirdSuit), (fourthRank,_), _ ) = hand
+   // --> start pipelining with simply the hand
+   [|1;2;3|]
+   // --> turn the hand into an array of cards using our toArray function
+
+   // --> Array.forall should call a lambda which takes a card and returns
+   //     whether the card's suit equals the remembered first suit
+   |> Array.forall( fun anInt -> anInt % 2 = 1 )
+
+testFunc "isFlush true" isFlush ( parseHand "2D 6D tD jD aD" )
+testFunc "isFlush false" isFlush ( parseHand "2C 3D 4D 5S 5H" )
+
+
+(*
+One of the biggest ways to analyze a poker hand is by the count of distinct
+ranks.  For example, four of a kind would have 4 of one rank with 1 of another.
+We don't even need to know what rank they are to identify the score category. We
+won't throw away the actual rank, however, because we'll need them for breaking
+most ties with two hands of the same category.  We will use Array.countBy which
+groups, but doesn't return an array of groups, just an array of the tuple of the
+group value and the number of items in the group.
+
+   [|1;1;1;2;2;5|] |> Array.countBy id
+   // gives [|(1,3);(2,2);(5,1)|] -- '1' appears 3 times, etc.
+
+We will also turn our array result into a list, because pattern matching against
+a list is extremely powerful.  Lists can deconstruct using the list cons
+operator '::' which let you use arbitrary lengths, which is extremely useful for
+algorithms which don't care about the rest of the list, or recursive algorithms
+which break off pieces to process, then recurse until finished:
+
+   let firstNum :: secondNum :: theEntireRemainder = listOfNumbers
+
+   let print content = printfn "%A" content
+   let rec printList (list:int list) =
+      match list with
+      | [] -> () // done, return unit
+      | head :: rest ->
+         print head
+         printList rest
+*)
+
+// -----------------------------------------------------------------------------
+// Return list of counts * Rank, sorted descending.
+// Ex: 2_ 3_ 3_ T_ J_ returns [(2,3);(1,J);(1,T);(1;2)]
+// -----------------------------------------------------------------------------
+let getRankCounts hand =
+   // --> start pipelining with the given hand then turn it into an array
+   [|(Rank.Squared1,Suit.Suit1)|]
+
+   |> Array.countBy( fun (r,_) -> r ) // count by only rank (can ignore suit)
+   // --> Array.map (value,count) into (count,value)
+
+   // --> pipe to Array.sort then to Array.rev
+
+   |> Array.toList
+
+testFunc "getRankCounts 4kind" getRankCounts <| parseHand "2D 6D 2H 2S 2C"
+testFunc "getRankCounts fh" getRankCounts <| parseHand "3C 2D 2H 3S 2C"
+testFunc "getRankCounts 3kind" getRankCounts <| parseHand "2D 6D 2H 2S 5C"
+testFunc "getRankCounts 2pair" getRankCounts <| parseHand "2D 6D 2H 6H 3C"
+testFunc "getRankCounts 1pair" getRankCounts <| parseHand "2D 6D 4H 6H 3C"
+testFunc "getRankCounts hc" getRankCounts <| parseHand "2D 3H 4S 5C 8H"
+
+
+(*
+The final function!  Actually analyzing a poker hand!  We will pattern match on
+a three-tuple of the hand properties:  isStraight, isFlush, rankCounts.  From
+these properties, we can get everything we need not only for determining score
+category, but also all high cards and kickers.
+
+
+*)
+// -----------------------------------------------------------------------------
+// Determine the correct HandScore for the given hand.
+//   Assumes the hand is valid and already sorted by Rank ascending (such as
+//   from parseHand).
+//   Algorithm is to determine three properties of the hand:
+//     1) It is a straight (T/F)
+//     2) It is a flush (T/F)
+//     3) We have a list of the rank counts
+//   We can correctly score the hand by matching these properties
+// -----------------------------------------------------------------------------
+let analyzeHand hand = 
+   // gather hand properties
+   // --> call our isStraight, isFlush functions
+   let isStraight = false
+   let isFlush = true
+   // --> call our getRankCounts functions
+   let rankCounts = [(5,Rank.Squared3)]
+   // match pattern of properties to determine HandScore
+   match (isStraight, isFlush, rankCounts) with
+   // matches with straight and/or flush
+   // --> RoyalFlush is straight, flush, and the high card is an Ace
+   | (_, _, (1,Rank.Squared2) :: _ ) -> RoyalFlush
+   // --> StraightFlush is true, true, and not ace (deconstruct to hold high
+   //     and pass that as value of StraightFlush)
+   | (_, _, (1,Rank.Squared1) :: _ ) -> StraightFlush -37
+   // --> Flush is NOT straight, flush, remember high card
+   
+   // --> Straight is straight, NOT flush, remember high card
+
+   // matches based on count only, so throw away flush and straight
+   | (false, false, _ ) ->
+      match rankCounts with
+      // --> switch value of FourKind to be (rank,kick)
+      | [(4,rank); (1,kick)] -> FourKind -37
+      // --> FullHouse is 3,2 instead of 4,1
+
+      // --> ThreeKind is 3,1,something instead of 4,1
+      
+      // --> TwoPair is 2(rank high),2(rank low),1(kicker) instead of 4,1
+
+      // --> OnePair is 2(rank),1(kick 1),1(kick 2),1(kick 3) instead of 4,1
+      
+      // --> HighCard is 1(high),1(k1),1(k2),1(k3),1(k4) instead of 4,1
+      
+      | _ -> failwith "Should be unreachable, merely completes matching."
+   | _ -> failwith "Should be unreachable, merely completes matching."
+
+testFunc "analyzeHand Royal" analyzeHand <| parseHand "tC jC qC kC aC"
+testFunc "analyzeHand StrFlush" analyzeHand <| parseHand "9C tC jC qC kC"
+testFunc "analyzeHand Flush" analyzeHand <| parseHand "3C tC jC qC kC"
+testFunc "analyzeHand Straight" analyzeHand <| parseHand "9S tS jC qC kC"
+testFunc "analyzeHand FourKind" analyzeHand <| parseHand "kS kD kC kH 2C"
+testFunc "analyzeHand FullHouse" analyzeHand <| parseHand "kS kD kC 2H 2C"
+testFunc "analyzeHand ThreeKind" analyzeHand <| parseHand "kS kD kC 4H 2C"
+testFunc "analyzeHand TwoPair" analyzeHand <| parseHand "kS kD qC qH 2C"
+testFunc "analyzeHand OnePair" analyzeHand <| parseHand "kS kD qC 4H 2C"
+testFunc "analyzeHand HighCard" analyzeHand <| parseHand "kS qD tC 4H 2C"
+
+(*
+You did it!  At this point, you can take hands as shown in the tests above and
+compare their analyses to determine which hand is better:
+
+   let hand1Score = analyzeHand <| parseHand "kS kD kC kH 2C"
+   let hand2Score = analyzeHand <| parseHand "qS qD qC qH aC"
+   printfn "%A" (max hand1Score hand2Score)
+   // yes, 4 Kings with a 2 kicker beats 4 Queens with an Ace kicker!
+
+Hopefully you had fun and learned something about F#.  When you're ready,
+compare your changes against the intermediate script.  The only change there is
+that all tests have been moved into a Test module at the end of the script,
+because one of the intermediate script tasks is to improve testing capability.
+*)
