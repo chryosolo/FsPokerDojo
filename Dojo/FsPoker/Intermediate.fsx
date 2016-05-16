@@ -6,7 +6,7 @@ It's MIT licensed - use it, share it, modify it. *)
 
 (*
 Introduction
-###############################################################################
+################################################################################
 The goal of the dojo is to take a valid poker hand and put it in the correct
 scoring category.  To achieve this, we will break the task down into manageable
 pieces, and then suggest directions to explore further! 
@@ -38,9 +38,9 @@ Give existing Beginner code, all fixed.  Take the following improvements:
 failwith( "Any time you see '-->', this is a task for you!" )
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Suits as an isolated concept
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 type Suit =
    | Clubs
    | Spades
@@ -48,9 +48,9 @@ type Suit =
    | Diamonds
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Rank as an isolated concept
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 type Rank = 
    | Two = 2
    | Three = 3
@@ -67,16 +67,16 @@ type Rank =
    | Ace = 14
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Card is a Rank and Suit
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 type Card = Rank * Suit
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Parse a character representation of a suit into a Suit.  Valid suits are:
 // 'C', 'S', 'H', 'D' -- case sensitive!
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 let parseSuit charSuit =
    match charSuit with
    | 'C' -> Suit.Clubs
@@ -86,10 +86,10 @@ let parseSuit charSuit =
    | _ -> failwith "Invalid suit." // wildcard match throws an error
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Parse a character representation of a rank into a Rank.  Valid values are:
 // '2' .. '9', 'T', 'J', 'Q', 'K', 'A' -- case sensitive!
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 let parseRank charRank =
    match charRank with
    | '2' -> Rank.Two
@@ -108,10 +108,10 @@ let parseRank charRank =
    | _ -> failwith "Invalid rank." // wildcard match throws an error
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Parse a two-character string representation of a card into a Card. Is NOT
 // case sensitive.
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 let parseCard (strCard:string) =
    // --> add a ToUpper so you can simplify above parsing!
    let chars = strCard.ToUpper().ToCharArray()
@@ -125,25 +125,25 @@ let parseCard (strCard:string) =
    | _ -> failwith "Invalid card syntax."
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // A hand is five cards
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 type Hand = Card * Card * Card * Card * Card
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Return if the given array of cards has any duplicates.  Puts cards into
 // groups, and if number of groups is less than number of cards, there is a
 // duplicate.
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 let areDups cardArray =
    let uniqueCards = Array.groupBy id cardArray
    uniqueCards.Length < cardArray.Length
    
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Turn the array of 5 cards into a 5-tuple of cards, or fail if not 5.
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 let cardsToHand (cards:'a[]) =
    match cards.Length with
    // --> add case when length is 5, return a 5-tuple of cards
@@ -151,10 +151,10 @@ let cardsToHand (cards:'a[]) =
    | _ -> failwith "Invalid hand size."
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Parse the hand string into a valid hand, or fail with a reason why the hank
 // string was invalid.
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 let parseHand (strHand:string) =
    let cardTokens = strHand.Split[| ' ' |]
    // --> change the mapping to call our parseCard function
@@ -170,9 +170,9 @@ let parseHand (strHand:string) =
    | false -> cardsToHand cards
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Possible hand scoring categories
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 type HandCategory = 
    | HighCard of Rank * Rank * Rank * Rank * Rank
    | OnePair of Rank * Rank * Rank * Rank
@@ -186,25 +186,25 @@ type HandCategory =
    | RoyalFlush
    
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Return the hand (5-tuple of cards) as an array of cards
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 let toArray hand =
    let (c1, c2, c3, c4, c5) = hand
    [|c1;c2;c3;c4;c5|]
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Return if the second rank is exactly one more than the first rank
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 let isNextRank (r1 : Rank, r2 : Rank) =
    int r2 = int r1 + 1
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Return whether or not the given hand is a straight (sequential ranks)
 // Assumes the hand is valid and already sorted by Rank ascending.
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 let isStraight hand = 
    hand
    |> toArray
@@ -213,19 +213,21 @@ let isStraight hand =
    |> Seq.forall( fun( (r1, _), (r2,_ ) ) -> isNextRank (r1,r2) )
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Return whether or not the given hand is a flush (single suit)
 // Assumes the hand is valid (such as from parseHand)
-// ----------------------------------------------------------------------------
-let isFlush hand =
-   let cardArray = hand |> toArray
-   cardArray |> Array.forall( fun card -> snd card = snd cardArray.[0] )
+// -----------------------------------------------------------------------------
+let isFlush (hand:Hand) =
+   let ( (_,firstSuit), _, _, _, _ ) = hand
+   hand
+   |> toArray
+   |> Array.forall( fun card -> snd card = firstSuit )
 
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Return list of counts * Values, sorted descending.
 // Ex: 2_ 3_ 3_ T_ J_ returns [(2,3);(1,J);(1,T);(1;2)]
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 let getRankCounts hand = 
    hand
    |> toArray
@@ -235,15 +237,17 @@ let getRankCounts hand =
    |> Array.rev
    |> Array.toList
 
-// ----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
 // Determine the correct HandScore for the given hand.
-//   Assumes the hand is valid and already sorted by Value ascending (such as from parseHand)
+//   Assumes the hand is valid and already sorted by Value ascending (such as
+//   from parseHand)
 //   Algorithm is to determine three properties of the hand:
 //     1) It is a straight (T/F)
 //     2) It is a flush (T/F)
 //     3) We have a list of the rank counts
 //   We can correctly score the hand by matching these properties
-// -------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 let analyzeHand hand = 
    // gather hand properties
    let isStraight = isStraight hand
@@ -323,7 +327,7 @@ module Tests =
    testFunc "parseHand invalid hand size" parseHand "2C 3D 6S KC"
    testFunc "parseHand duplicate card" parseHand "2C 4H 3D 6S 2C"
 
-   // ----- isNextValue -----
+   // ----- isNextRank -----
    testFunc "isNextRank true - two,three" isNextRank (Rank.Two, Rank.Three)
    testFunc "isNextRank true - king,ace" isNextRank (Rank.King, Rank.Ace)
    testFunc "isNextRank false - six,ten" isNextRank (Rank.Six, Rank.Ten)
