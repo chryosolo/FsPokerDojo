@@ -18,20 +18,16 @@ The INTERMEDIATE script takes over from there -- the beginner program is simply
 given, already working, and steps will work toward the improvement of the
 program by giving better error handling using computational expressions and
 Railway Oriented Programming, and better testing using FsCheck and xUnit.
-
-The FINAL script shows my personal implementation of all intermediate tasks.
 *)
 
 
 (*
-Give existing Beginner code, all fixed.  Take the following improvements:
-
-* Switch Suit to enum of char, use that in matching?
-  https://fsharpforfunandprofit.com/posts/enum-types/
-* Pull in "ROP"
-* parseHand does Option.map or "maybe" monad
-* FsCheck
-
+Goals
+################################################################################
+* Convert the basic solution to use Railway-Oriented Programming
+  (guided script under construction)
+* Improve the testing capability using FsCheck and Xunit
+  (guided script under construction)
 *)
 
 // --> delete this error when you understand to look for tasks! :)

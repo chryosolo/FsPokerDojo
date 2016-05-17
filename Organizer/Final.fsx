@@ -20,19 +20,9 @@ program by giving better error handling using computational expressions and
 Railway Oriented Programming, and better testing using FsCheck and xUnit.
 
 The FINAL script shows my personal implementation of all intermediate tasks.
+-- Note, still under construction --
 *)
 
-
-(*
-Give existing Beginner code, all fixed.  Take the following improvements:
-
-* Switch Suit to enum of char, use that in matching?
-  https://fsharpforfunandprofit.com/posts/enum-types/
-* Pull in "ROP"
-* parseHand does Option.map or "maybe" monad
-* FsCheck
-
-*)
 
 // --> delete this error when you understand to look for tasks! :)
 //failwith( "Any time you see '-->', this is a task for you!" )
@@ -49,6 +39,8 @@ type Failure =
    | InvalidCardSyntax of string
    | HandHasInvalidCards
    | HandHasDuplicates
+   // tooling
+   | ToolInvalidCardIndex of int
 
 
 // -----------------------------------------------------------------------------
@@ -63,6 +55,8 @@ let explainFailure failType =
    | InvalidCardSyntax s -> sprintf "Invalid Card Syntax of '%s'" s
    | HandHasInvalidCards -> "Hand has one or more invalid cards"
    | HandHasDuplicates -> "Hand has one or more duplicate cards"
+   // tooling
+   | ToolInvalidCardIndex i -> sprintf "Card cannot be retrieved by index %i" i
 
 
 // -----------------------------------------------------------------------------
@@ -529,3 +523,118 @@ module Tests =
    assertSuccess  "analyzeHand HighCard"
                   ( HighCard (Rank.Ace,Rank.Ten,Rank.Six,Rank.Five,Rank.Two ) )
                   ( getHand "aS tD 6h 5c 2c" |> analyzeHand )
+
+module Tools =
+   open System
+   open System.IO
+
+   let getSuccess =
+      function
+      | Success result -> result
+      | Fail _ -> failwith "Expecting Success"
+
+   let intToCard i =
+      let suitArray = [|Suit.Clubs;Suit.Diamonds;Suit.Hearts;Suit.Spades|]
+      let rankArray = [|Rank.Two;Rank.Three;Rank.Four;Rank.Five;Rank.Six;Rank.Seven;Rank.Eight;
+                        Rank.Nine;Rank.Ten;Rank.Jack;Rank.Queen;Rank.King;Rank.Ace|]
+      if i >= 0 && i < 52
+         then Success (rankArray.[i%13],suitArray.[i/13])
+         else Fail [ ToolInvalidCardIndex i ]
+
+   Tests.assertSuccess "intToCard success" (Rank.Two,Suit.Clubs) (intToCard 0)
+   Tests.assertSuccess "intToCard success" (Rank.Ace,Suit.Spades) (intToCard 51)
+   Tests.assertFail "intToCard underflow" [ ToolInvalidCardIndex -1 ] (intToCard -1)
+   Tests.assertFail "intToCard overflow" [ ToolInvalidCardIndex 52 ] (intToCard 52)
+
+
+   let handGenerator =
+      let buildNewDeck (rnd:Random) =
+         let rec indexGen i (list:(int*double) list) =
+            match i with
+            | 52 -> list
+            | _ -> indexGen (i+1) ((i,rnd.NextDouble())::list)
+         indexGen 0 []
+         |> List.sortBy( fun (_,rnd) -> rnd )
+         |> List.map( fun (i,_) ->
+            match intToCard i with | Success s -> s | Fail _ -> failwith "fail" )
+      let rnd = new Random()
+      Seq.unfold( fun deck ->
+         match deck with
+         | c0::c1::c2::c3::c4::rest ->
+            Some( (c0,c1,c2,c3,c4), rest )
+         | _ ->
+            let c0::c1::c2::c3::c4::rest = buildNewDeck rnd
+            Some( (c0,c1,c2,c3,c4), rest )
+         ) (buildNewDeck rnd)
+   
+
+   let serializeRank =
+      function
+      | Rank.Two -> Success '2' | Rank.Three -> Success '3' | Rank.Four -> Success '4'
+      | Rank.Five -> Success '5'| Rank.Six -> Success '6' | Rank.Seven -> Success '7'
+      | Rank.Eight -> Success '8' | Rank.Nine -> Success '9' | Rank.Ten -> Success 't'
+      | Rank.Jack -> Success 'j' | Rank.Queen -> Success 'q' | Rank.King -> Success 'k'
+      | Rank.Ace -> Success 'a'
+      | _ -> Fail [ InvalidRank '?' ]
+
+   let badRank = enum<Rank>(1)
+   Tests.assertSuccess "serializeRank success" '6' (serializeRank Rank.Six)
+   Tests.assertFail "serializeRank invalid" [ InvalidRank '?' ] (serializeRank badRank)
+
+
+   let serializeSuit =
+      function
+      | Suit.Clubs -> Success 'C'
+      | Suit.Diamonds -> Success 'D'
+      | Suit.Hearts -> Success 'H'
+      | Suit.Spades -> Success 'S'
+
+   Tests.assertSuccess "serializeSuit success" 'C' (serializeSuit Suit.Clubs)
+
+
+   let serializeCard card =
+      let rank,suit = card
+      match serializeRank rank, serializeSuit suit with
+      | Success r, Success s -> Success ( sprintf "%c%c" r s)
+      | Success _, Fail f -> Fail f
+      | Fail f, Success _ -> Fail f
+      | Fail f1, Fail f2 -> Fail ( List.append f1 f2 )
+
+   Tests.assertSuccess "serializeCard success" "6C" (serializeCard (Rank.Six,Suit.Clubs))
+   Tests.assertFail "serializeCard invalid" [ InvalidRank '?' ] (serializeCard (badRank,Suit.Clubs))
+
+   
+   let serializeHand hand =
+      let c0,c1,c2,c3,c4 = hand
+      let getCard card =
+         match serializeCard card with
+         | Success str -> str
+         | _ -> failwith "invalid card"
+      sprintf "%s %s %s %s %s" (getCard c0) (getCard c1) (getCard c2) (getCard c3) (getCard c4)
+
+   let writeHands () =
+      let hands = handGenerator |> Seq.take 10000 |> Seq.map serializeHand
+      File.WriteAllLines( "fix path!\hands.txt", hands )
+
+module Challenges =
+   open System.IO
+
+   let compareHands hand1 hand2 =
+      let hand1Score = hand1 |> Success |> parseHand >>= analyzeHand |> Tools.getSuccess
+      let hand2Score = hand2 |> Success |> parseHand >>= analyzeHand |> Tools.getSuccess
+      printfn "Best hand is %A" (max hand1Score hand2Score)
+
+   let analyzeHands() =
+      let handsStr = File.ReadAllLines( "fix path!\hands.txt" )
+      let hands = handsStr |> Array.map (Success >> parseHand)
+      let scores =
+         hands
+         |> Array.choose( function
+            | Success h -> Some (h,(analyzeHand h))
+            | Fail _ -> None )
+         |> Array.sortBy( fun (_,analysis) -> analysis )
+         |> Array.rev
+         |> Array.choose( function
+            | hand, Success analysis -> Some( sprintf "%s: %A" (Tools.serializeHand hand) analysis )
+            | _, Fail _ -> None )
+      File.WriteAllLines( "fix path!\hands_scored.txt", scores )

@@ -18,8 +18,6 @@ The INTERMEDIATE script takes over from there -- the beginner program is simply
 given, already working, and steps will work toward the improvement of the
 program by giving better error handling using computational expressions and
 Railway Oriented Programming, and better testing using FsCheck and xUnit.
-
-The FINAL script shows my personal implementation of all intermediate tasks.
 *)
 
 // --> delete this error when you understand to look for tasks! :)
@@ -722,15 +720,31 @@ testFunc "analyzeHand HighCard" analyzeHand <| parseHand "kS qD tC 4H 2C"
 
 (*
 You did it!  At this point, you can take hands as shown in the tests above and
-compare their analyses to determine which hand is better:
-
-   let hand1Score = analyzeHand <| parseHand "kS kD kC kH 2C"
-   let hand2Score = analyzeHand <| parseHand "qS qD qC qH aC"
-   printfn "%A" (max hand1Score hand2Score)
-   // yes, 4 Kings with a 2 kicker beats 4 Queens with an Ace kicker!
+easily compare their analyses to determine which hand is better -- F# gives the
+comparison for free using the max function, or any of the collection Sort
+functions.  F# also gives for free the ability to print the analysis, as seen
+in the above analyzeHand tests.
 
 Hopefully you had fun and learned something about F#.  When you're ready,
 compare your changes against the intermediate script.  The only change there is
 that all tests have been moved into a Test module at the end of the script,
 because one of the intermediate script tasks is to improve testing capability.
+
+
+Challenges
+################################################################################
+
+Challenge 1: Create a function which takes two string hand representations and
+prints out the better scoring hand.
+
+Challenge 2: The solution includes a file, hands.txt which lists 10,000 hands.
+Find the top 25 hands.  Compare against the Organizer's Notes.
+
+Challenge 3: Give a better hand-analysis reporting function which when given
+two hands, only prints out enough of the analysis as is necessary.
+  e.g. Comparing "aH kH qH jH tH" and "2C 3H 4D 7S 7H" would say
+                 RoyalFlush beats OnePair
+  e.g. Comparing "aH aD 2H 3H 4H" and "aC aS 2C 3C 5C" would say
+                 OnePair Ace with Kicker of Five beats
+                 OnePair Ace with Kicker of Four
 *)
