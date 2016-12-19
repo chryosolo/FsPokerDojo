@@ -72,12 +72,12 @@ DU choices do not have to have any data, and are like an unnumbered enum.
 
 There are four suits: Clubs, Spades, Hearts, and Diamonds. *)
 
-// --> Fix and complete the Suit DU.
-
 // -----------------------------------------------------------------------------
 // Suits as an isolated concept
 // -----------------------------------------------------------------------------
 type Suit =
+   | Clubs
+// --> Fix and complete the Suit DU.
    | Suit1
    | Suit2
 
@@ -94,12 +94,12 @@ programming. There are thirteen Ranks: Two, Three, Four, Five, Six, Seven,
 Eight, Nine, Ten, Jack, Queen, King, Ace
 *)
 
-// --> Fix and complete the Rank enum.
-
 // -----------------------------------------------------------------------------
 // Rank as an isolated concept
 // -----------------------------------------------------------------------------
 type Rank =
+   | Two = 2
+// --> Fix and complete the Rank enum.
    | Squared1 = 1
    | Squared2 = 4
    | Squared3 = 9
@@ -143,11 +143,11 @@ However, for us, our tuple portions aren't of the same type, so we don't need to
 worry about it! :) Our card type will be a tuple with a Rank and a Suit.
 *)
 
-// --> Fix the Card type definition
-
 // -----------------------------------------------------------------------------
 // Card is a Rank and Suit
 // -----------------------------------------------------------------------------
+
+// --> Fix the Card type definition
 type Card = int * float * bool
 
 (*
@@ -181,27 +181,27 @@ let isFavoriteRank rank =
 We will use C for clubs, S for spades, H for hearts, and D for diamonds.
 *)
 
-// --> fix and complete the function
-
 // -----------------------------------------------------------------------------
 // Parse a character representation of a suit into a Suit.  Valid suits are:
 // 'C', 'S', 'H', 'D'
 // -----------------------------------------------------------------------------
 let parseSuit charSuit =
    match charSuit with
+   | 'c'
+   | 'C' -> Suit.Clubs
+// --> fix and complete the function
    | 'q'                 // not handling 'q' means it is handled below
    | 'Q' -> Suit.Suit1   // 'Q' (and 'q') are handled here
    | 'W' -> Suit.Suit2
    | _ -> failwith "Invalid suit." // wildcard match throws an error
 
-testFunc "parseSuit success" parseSuit 'c'
+testFunc "parseSuit success" parseSuit 'd'
 testFunc "parseSuit invalid" parseSuit 'Q'
 
 (*
 We will use 2-9 for Two..Nine, T for Ten, J for Jack, Q for Queen, K for King,
 and A for Ace
 *)
-// --> fix and complete the parseRank function
 
 // -----------------------------------------------------------------------------
 // Parse a character representation of a rank into a Rank.  Valid values are:
@@ -209,6 +209,8 @@ and A for Ace
 // -----------------------------------------------------------------------------
 let parseRank charRank =
    match charRank with
+   | '2' -> Rank.Two
+// --> fix and complete the parseRank function
    | '1' -> Rank.Squared3
    | _ -> failwith "Invalid rank."
 
@@ -228,14 +230,14 @@ is invalid.
 // case sensitive.
 // -----------------------------------------------------------------------------
 let parseCard (strCard:string) =
-   // --> add a ToUpper so you can simplify above parsing!
+// --> add a ToUpper so you can simplify above parsing!
    let chars = strCard.   ToCharArray()
    match chars with
    // here pattern matching is seeing if the chars array can be placed into a
    // two-item array.  If it can, it will name them charValue and charSuit,
    // which you can use when it's appropriate!  Handy!
    | [| charRank; charSuit |] ->
-      // --> call the parseValue and parseSuit functions
+// --> call the parseValue and parseSuit functions
       let rank = Rank.Squared1
       let suit = Suit.Suit2
       rank,suit
@@ -262,11 +264,11 @@ Cards.
 // --> make sure your Card type from above matches, and then delete this line
 //     and switch all future Code from Card' to just Card
 type Card' = Rank * Suit
-// --> fix the hand type
 
 // -----------------------------------------------------------------------------
 // A hand is five cards
 // -----------------------------------------------------------------------------
+// --> fix the hand type
 type Hand = bool * double
 
 (*
@@ -296,8 +298,8 @@ a duplicate!
 // -----------------------------------------------------------------------------
 let areDups cardArray =
    let uniqueCards = Array.groupBy id cardArray
-   // --> functions return their last expression.  Here, we should return
-   //     whether the uniqueCards length is less than the cardArray length
+// --> functions return their last expression.  Here, we should return whether
+//     the uniqueCards length is less than the cardArray length
    true
    
 testFunc "areDups all unique" areDups [| (Rank.Squared1,Suit.Suit1);
@@ -366,7 +368,7 @@ use the value.  Very slick!
 // -----------------------------------------------------------------------------
 let cardsToHand (cards:'a[]) =
    match cards.Length with
-   // --> add case when length is 5, return a 5-tuple of cards
+// --> add case when length is 5, return a 5-tuple of cards
    | _ -> failwith "Invalid hand size."
 
 testFunc "cardsToHand success" cardsToHand [| (Rank.Squared1, Suit.Suit1); 
@@ -405,7 +407,7 @@ int cases by the compiler, so they're sortable too.
 // -----------------------------------------------------------------------------
 let parseHand (strHand:string) =
    let cardTokens = strHand.Split[| ' ' |]
-   // --> change the mapping to call our parseCard function
+// --> change the mapping to call our parseCard function
    let cards = cardTokens
                |> Array.map (fun token -> Rank.Squared1, Suit.Suit1 )
                |> Array.sort
@@ -414,7 +416,7 @@ let parseHand (strHand:string) =
    // let temp1 = Array.map (fun) cardTokens
    // let cards = Array.sort temp1
 
-   // --> pattern check result of the areDups function:
+// --> pattern check result of the areDups function:
    //     if duplicates, fail with duplicates
    //     if all unique, return cardsToHand of cards
    failwith "Duplicate cards found"
@@ -500,9 +502,9 @@ We will be turning an enum value to its corresponding int, which is easy:
 // Return if the second rank is exactly one more than the first rank
 // -----------------------------------------------------------------------------
 let isNextRank (ranks : Rank * Rank) =
-   // --> use deconstruction to pull rank1 and rank2 out from ranks
+// --> use deconstruction to pull rank1 and rank2 out from ranks
 
-   // --> return "rank2 as an int" equals "rank1 as an int" plus 1
+// --> return "rank2 as an int" equals "rank1 as an int" plus 1
    false
 
 testFunc "isNextRank true: two,three" isNextRank (parseRank '2', parseRank '3')
@@ -539,14 +541,14 @@ Also notice complex functions often just pipe data through simple functions:
 // Assumes the hand is valid and already sorted by Rank ascending.
 // -----------------------------------------------------------------------------
 let isStraight hand =
-   // --> start pipelining with simply the given hand instead of this mess :)
+// --> start pipelining with simply the given hand instead of this mess :)
    [|(parseRank '2',0),(parseRank '3',0)|]
-   // --> turn the hand into an array of cards using our toArray function
+// --> turn the hand into an array of cards using our toArray function
 
    |> Array.toSeq
-   // --> turn the sequence of cards into a sequence of card pairs
+// --> turn the sequence of cards into a sequence of card pairs
 
-   // --> return whether for all pairs the second rank is 'next' after the first
+// --> return whether for all pairs the second rank is 'next' after the first
    |> Seq.forall( fun( (r1, _), (r2,_ ) ) -> false )
 
 testFunc "isStraight true" isStraight ( parseHand "2C 3D 4D 5S 6H" )
@@ -586,14 +588,14 @@ actual transformation handled by a lambda:
 // Assumes the hand is valid (such as from parseHand)
 // -----------------------------------------------------------------------------
 let isFlush hand =
-   // --> deconstruct the hand so the first card's suit is saved
+// --> deconstruct the hand so the first card's suit is saved
    let ( _, _, (_,thirdSuit), (fourthRank,_), _ ) = hand
-   // --> start pipelining with simply the hand
+// --> start pipelining with simply the hand
    [|1;2;3|]
-   // --> turn the hand into an array of cards using our toArray function
+// --> turn the hand into an array of cards using our toArray function
 
-   // --> Array.forall should call a lambda which takes a card and returns
-   //     whether the card's suit equals the remembered first suit
+// --> Array.forall should call a lambda which takes a card and returns whether
+//     the card's suit equals the remembered first suit
    |> Array.forall( fun anInt -> anInt % 2 = 1 )
 
 testFunc "isFlush true" isFlush ( parseHand "2D 6D tD jD aD" )
@@ -634,13 +636,13 @@ which break off pieces to process, then recurse until finished:
 // Ex: 2_ 3_ 3_ T_ J_ returns [(2,3);(1,J);(1,T);(1;2)]
 // -----------------------------------------------------------------------------
 let getRankCounts hand =
-   // --> start pipelining with the given hand then turn it into an array
+// --> start pipelining with the given hand then turn it into an array
    [|(Rank.Squared1,Suit.Suit1)|]
 
    |> Array.countBy( fun (r,_) -> r ) // count by only rank (can ignore suit)
-   // --> Array.map (value,count) into (count,value)
+// --> Array.map (value,count) into (count,value)
 
-   // --> pipe to Array.sort then to Array.rev
+// --> pipe to Array.sort then to Array.rev
 
    |> Array.toList
 
@@ -672,37 +674,37 @@ category, but also all high cards and kickers.
 // -----------------------------------------------------------------------------
 let analyzeHand hand = 
    // gather hand properties
-   // --> call our isStraight, isFlush functions
+// --> call our isStraight, isFlush functions
    let isStraight = false
    let isFlush = true
-   // --> call our getRankCounts functions
+// --> call our getRankCounts functions
    let rankCounts = [(5,Rank.Squared3)]
    // match pattern of properties to determine HandScore
    match (isStraight, isFlush, rankCounts) with
    // matches with straight and/or flush
-   // --> RoyalFlush is straight, flush, and the high card is an Ace
+// --> RoyalFlush is straight, flush, and the high card is an Ace
    | (_, _, (1,Rank.Squared2) :: _ ) -> RoyalFlush
-   // --> StraightFlush is true, true, and not ace (deconstruct to hold high
-   //     and pass that as value of StraightFlush)
+// --> StraightFlush is true, true, and not ace (deconstruct to hold high and
+//     pass that as value of StraightFlush)
    | (_, _, (1,Rank.Squared1) :: _ ) -> StraightFlush -37
-   // --> Flush is NOT straight, flush, remember high card
+// --> Flush is NOT straight, flush, remember high card
    
-   // --> Straight is straight, NOT flush, remember high card
+// --> Straight is straight, NOT flush, remember high card
 
    // matches based on count only, so throw away flush and straight
    | (false, false, _ ) ->
       match rankCounts with
-      // --> switch value of FourKind to be (rank,kick)
+// --> switch value of FourKind to be (rank,kick)
       | [(4,rank); (1,kick)] -> FourKind -37
-      // --> FullHouse is 3,2 instead of 4,1
+// --> FullHouse is 3,2 instead of 4,1
 
-      // --> ThreeKind is 3,1,something instead of 4,1
+// --> ThreeKind is 3,1,something instead of 4,1
       
-      // --> TwoPair is 2(rank high),2(rank low),1(kicker) instead of 4,1
+// --> TwoPair is 2(rank high),2(rank low),1(kicker) instead of 4,1
 
-      // --> OnePair is 2(rank),1(kick 1),1(kick 2),1(kick 3) instead of 4,1
+// --> OnePair is 2(rank),1(kick 1),1(kick 2),1(kick 3) instead of 4,1
       
-      // --> HighCard is 1(high),1(k1),1(k2),1(k3),1(k4) instead of 4,1
+// --> HighCard is 1(high),1(k1),1(k2),1(k3),1(k4) instead of 4,1
       
       | _ -> failwith "Should be unreachable, merely completes matching."
    | _ -> failwith "Should be unreachable, merely completes matching."
