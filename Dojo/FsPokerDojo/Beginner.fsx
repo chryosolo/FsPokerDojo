@@ -402,7 +402,7 @@ int cases by the compiler, so they're sortable too.
 *)
 
 // -----------------------------------------------------------------------------
-// Parse the hand string into a valid hand, or fail with a reason why the hank
+// Parse the hand string into a valid hand, or fail with a reason why the hand
 // string was invalid.
 // -----------------------------------------------------------------------------
 let parseHand (strHand:string) =
@@ -455,7 +455,7 @@ type HandCategory =
    | OnePair of int
    // --> TwoPair is a 3-tuple of Rank
    | TwoPair of int
-   // --> ThreeKind is a 2-tuple of Rank
+   // --> ThreeKind is a 3-tuple of Rank
    | ThreeKind of int
    // --> Straight and Flush are just a Rank
    | Straight of int
