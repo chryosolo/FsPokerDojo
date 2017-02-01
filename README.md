@@ -75,7 +75,7 @@ of a kind will also have a three of a kind and two of a kind, but would only be 
 * (Score of 6) **Flush**:
   * Hand has cards of only a single suit
   * Example: 2♥ 4♥ 6♥ 9♥ [J]♥ ( no cards are ignored in this category )
-  * The highest card value is the rank, and there is no kicker
+  * The highest card value is the rank, and remaining ranks are kickers
   * There are 5,108 possible hands, for a likelihood of 0.196%
 * (Score of 5) **Straight**:
   * Hand has card values that are all unique and are all adjacent
