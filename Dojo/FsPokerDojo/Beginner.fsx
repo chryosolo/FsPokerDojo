@@ -124,7 +124,7 @@ get around this:
 * Records are like a class, and allow by-name access:
    
    type Date = { Year:int; Month:int; Day:int; DayOfWeek:DayOfWeek }
-   let petBirthDate = { Year:2010; Month=12; Day=14;
+   let petBirthDate = { Year=2010; Month=12; Day=14;
                         DayOfWeek=DayOfWeek.Tuesday }
 
 * Single-case DUs label an intent of a basic type and can help avoid "primitive
@@ -457,8 +457,9 @@ type HandCategory =
    | TwoPair of int
    // --> ThreeKind is a 3-tuple of Rank
    | ThreeKind of int
-   // --> Straight and Flush are just a Rank
+   // --> Straight is just a Rank
    | Straight of int
+   // --> Flush is a 5-tuple of Rank
    | Flush of int
    // --> FullHouse and FourKind are a 2-tuple of Rank
    | FullHouse of int
@@ -687,7 +688,7 @@ let analyzeHand hand =
 // --> StraightFlush is true, true, and not ace (deconstruct to hold high and
 //     pass that as value of StraightFlush)
    | (_, _, (1,Rank.Squared1) :: _ ) -> StraightFlush -37
-// --> Flush is NOT straight, flush, remember high card
+// --> Flush is NOT straight, flush, remember all ranks
    
 // --> Straight is straight, NOT flush, remember high card
 
